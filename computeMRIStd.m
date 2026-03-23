@@ -3,20 +3,37 @@ function sigmaM = computeMRIStd(S, opts)
 % tracking
 
 arguments (Input)
-   S struct
-   opts.colorMap {mustBeMember(opts.colorMap,["parula","turbo"...
-       "spring","summer","autumn","winter" ...
-       "hsv","hot","cool"...
-       "gray","bone","copper","pink","sky"...
-       "abyss","nebula","jet","lines"])} = "bone";
+    S struct
+    opts.colorMap {mustBeMember(opts.colorMap,["parula","turbo"...
+        "spring","summer","autumn","winter" ...
+        "hsv","hot","cool"...
+        "gray","bone","copper","pink","sky"...
+        "abyss","nebula","jet","lines"])} = "bone";
+    opts.fName string = ""
+    opts.dims double = 0.75;
 end
 
 arguments (Output)
-   sigmaM (:,:)
+    sigmaM (:,:)
 end
 
+% Prepare figure
+fig = figure(Theme="dark",Units="normalized",Position=[0 0 opts.dims opts.dims]);
+pause(1)
+
 colormap(opts.colorMap)
-MRI = double(buildMRITensor(S,flipud=true));
-I = std(double(MRI),1,3);
-imagesc(I)
+MRI = (buildMRITensor(S,flipud=true));
+sigmaM = std(double(MRI),1,3);
+imagesc(sigmaM)
+colorbar()
+set(gca,"LineWidth",2)
+
+if ~strcmpi(opts.fName,"")
+    exportgraphics(fig,opts.fName)
+else
+    fprintf("Press space bar to continue \n")
+    pause()
+end
+
+close(fig)
 end
