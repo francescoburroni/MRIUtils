@@ -18,8 +18,6 @@ arguments (Output)
 end
 
 % Prepare figure
-fig = figure(Theme="dark",Units="normalized",Position=[0 0 opts.dims opts.dims]);
-pause(1)
 
 colormap(opts.colorMap)
 MRI = (buildMRITensor(S,flipud=true));
@@ -29,11 +27,14 @@ colorbar()
 set(gca,"LineWidth",2)
 
 if ~strcmpi(opts.fName,"")
+    fig = figure(Theme="dark",Units="normalized",Position=[0 0 opts.dims opts.dims]);
+    pause(1)
     exportgraphics(fig,opts.fName)
+    close(fig)
 else
     fprintf("Press space bar to continue \n")
     pause()
 end
 
-close(fig)
+
 end
