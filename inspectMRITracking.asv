@@ -21,13 +21,14 @@ fig.UserData.MRI = results.MRI;
 grid = uigridlayout(fig,[2, 1]);
 ax1 = uiaxes(grid);
 mriH = imagesc(ax1,fig.UserData.MRI(:,:,fig.UserData.frameIdx));
-fig.UserData.mriH = mriH;
+
+fig.UserData.mriH
 colormap(ax1,opts.colormap)
 fig.UserData.MRI = results.MRI;
 % First plot is the image
 
 slider = uislider(grid,Limits=[1 size(results.MRI,3)],ValueChangedFcn=@(src,event) updateValue(src,event,fig));
-slider.Value = fig.UserData.frameIdx ;
+slider.Value = fig.UserData;
 
 
 
@@ -35,7 +36,6 @@ slider.Value = fig.UserData.frameIdx ;
 
 end
 
-function updateValue(src,event,fig)
-fig.UserData.frameIdx = event.Value;
-set(fig.UserData.mriH,"CData",fig.UserData.MRI(:,:,round(fig.UserData.frameIdx)))
+function updateValue(src,event,fig,ax)
+imagesc(ax1,results.MRI(:,:,slider.Value))
 end
