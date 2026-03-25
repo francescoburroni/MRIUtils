@@ -69,6 +69,7 @@ while ~strcmpi(answer, "Yes")
 
     %% Preview mask overlaid on first frame for user confirmation
     mask.array = roi.createMask();
+    mask.roi = roi();
     imshowpair(results.MRI(:,:,1), mask.array, "falsecolor")
     shg
     answer = questdlg("Is the ROI okay?", "ROI Confirmation");

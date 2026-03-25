@@ -1,35 +1,37 @@
-function [frameROIMeanInt, CentroidROIPosition] = extractROIProperties(S, mask, opts)
+function results = extractROIProperties(results, opts)
 % EXTRACTROIPROPERTIES Extract mean intensity and weighted centroid in a
-% mask ROI from rtMRI speech data.
+% mask ROI from rtMRI speech data, storing results in the results struct.
 %
-% For each trial in S, the function loops over MRI frames and computes:
+% For each trial in results.MRIC, loops over MRI frames and computes:
 %   - Mean pixel intensity within the mask region (constriction degree proxy)
 %   - Weighted centroid of the mask region, using pixel intensities as weights
+%
+% Results are stored directly under results.(maskName) for flat, readable
+% access e.g. results.larynx.meanInt, results.velum.centroid.
 %
 % If the mask contains multiple connected components (e.g. upper/lower lip),
 % the function selects the most anatomically appropriate component based on
 % mask name (rightmost for larynx/velum, largest for lips) and issues a warning.
 %
 % Syntax:
-%   [meanInt, centroid] = extractROIProperties(S, mask)
-%   [meanInt, centroid] = extractROIProperties(S, mask, flipud=true, doPlot=true)
+%   results = extractROIProperties(results)
+%   results = extractROIProperties(results, maskName="larynx", flipud=true, doPlot=true)
 %
 % Inputs:
-%   S       - struct array of trials, each with fields:
-%               .mri    : H x W x nFrames image tensor
-%               .mriFs  : MRI frame rate (Hz)
-%   mask    - struct with fields:
-%               .array  : logical H x W mask
-%               .name   : string name of the mask (e.g. "lips", "velum", "larynx")
+%   results - struct with fields:
+%               .MRIC  : trial struct array, each with .mri (H x W x nFrames)
+%               .masks : struct with mask fields e.g. .masks.larynx
 %
 % Optional name-value inputs:
+%   maskName      - name of mask to use, must exist in results.masks (default: "noName")
 %   flipud        - flip frames vertically before processing (default: false)
 %   rescaleFactor - spatial rescaling factor passed to imresize (default: 1)
 %   doPlot        - display frames with centroid overlay during processing (default: false)
 %
-% Outputs:
-%   frameROIMeanInt     - {1 x nTrials} cell array of [nFrames x 1] mean intensity vectors
-%   CentroidROIPosition - {1 x nTrials} cell array of [nFrames x 2] centroid matrices [x, y]
+% Output:
+%   results - input struct with added fields:
+%               .(maskName).meanInt  : {1 x nTrials} mean intensity vectors
+%               .(maskName).centroid : {1 x nTrials} centroid position matrices [x, y]
 %
 % Notes:
 %   - Mean intensity is a proxy for constriction degree: lower intensity
@@ -37,33 +39,30 @@ function [frameROIMeanInt, CentroidROIPosition] = extractROIProperties(S, mask, 
 %   - Weighted centroid tracks the center of mass of the articulator within
 %     the ROI, useful for tracking articulator position over time.
 %
-% See also: regionprops, drawMask, buildMRITensor
+% See also: regionprops, drawMRIMask, computeMRIStd
 %
 % Author: Francesco Burroni
 % Last edited: 2026
 
 %% Input/Output argument validation
 arguments (Input)
-    S
-    mask
-    opts.flipud        logical = false;   % flip frames vertically (MRI often stored inverted)
-    opts.rescaleFactor double  = 1;       % spatial rescaling factor (1 = no rescaling)
-    opts.doPlot        logical = false;   % toggle frame-by-frame visualization
+    results
+    opts.maskName      string  = "noName"  % must match a field in results.masks
+    opts.rescaleFactor double  = 1;        % spatial rescaling factor (1 = no rescaling)
+    opts.doPlot        logical = false;    % toggle frame-by-frame visualization
 end
 arguments (Output)
-    frameROIMeanInt       % cell array of mean intensity trajectories
-    CentroidROIPosition   % cell array of centroid position trajectories
+    results
 end
 
+%% Retrieve mask from results
+mask = results.masks.(opts.maskName);
+
 %% Main loop over trials
-for k = 1:numel(S)
+for k = 1:numel(results.MRIC)
 
     %% Preprocessing: flip and rescale MRI frames if needed
-    if opts.flipud
-        mri = imresize(flipud(S(k).mri), opts.rescaleFactor);
-    else
-        mri = imresize(S(k).mri, opts.rescaleFactor);
-    end
+    mri = imresize((results.MRIC{k}), opts.rescaleFactor);
 
     % Preallocate outputs for this trial
     nFrames     = size(mri, 3);
@@ -90,11 +89,11 @@ for k = 1:numel(S)
             centroidInt(l, 1:2) = props.WeightedCentroid;
         else
             % Multiple components — select most anatomically appropriate one
-            % and warn user (warning fires once per mask name per session)
+            % Warning fires once per mask name per session
             centroidInt(l, 1:2) = selectCentroid(props, mask.name);
             warning('extractROIProperties:multipleRegions', ...
                 ['Mask "%s" has %d connected components at frame %d. ' ...
-                 'Selecting %s component. Check mask or use imfill/imdilate to merge regions.'], ...
+                'Selecting %s component. Check mask or use imfill/imdilate to merge regions.'], ...
                 mask.name, numel(props), l, selectionRule(mask.name));
         end
 
@@ -104,14 +103,15 @@ for k = 1:numel(S)
             colormap("bone");
             plot(centroidInt(l,1), centroidInt(l,2), "w.", MarkerSize=25);
             hold off;
-            pause(0.25);
+            pause(0.1);
         end
 
     end % end frame loop
 
-    %% Store results for this trial
-    frameROIMeanInt{k}     = meanInt;
-    CentroidROIPosition{k} = centroidInt;
+    %% Store trajectories for this trial directly under mask name
+    % Access pattern: results.larynx.meanInt{k}, results.velum.centroid{k}
+    results.masks.(opts.maskName).meanInt{k}  = meanInt;
+    results.masks.(opts.maskName).centroid{k} = centroidInt;
 
 end % end trial loop
 
