@@ -6,8 +6,8 @@ function results = extractROIProperties(results, opts)
 %   - Mean pixel intensity within the mask region (constriction degree proxy)
 %   - Weighted centroid of the mask region, using pixel intensities as weights
 %
-% Results are stored directly under results.(maskName) for flat, readable
-% access e.g. results.larynx.meanInt, results.velum.centroid.
+% Results are stored under results.masks.(maskName) alongside the mask array,
+% keeping all mask-related data together in one place.
 %
 % If the mask contains multiple connected components (e.g. upper/lower lip),
 % the function selects the most anatomically appropriate component based on
@@ -15,23 +15,22 @@ function results = extractROIProperties(results, opts)
 %
 % Syntax:
 %   results = extractROIProperties(results)
-%   results = extractROIProperties(results, maskName="larynx", flipud=true, doPlot=true)
+%   results = extractROIProperties(results, maskName="larynx", doPlot=true)
 %
 % Inputs:
 %   results - struct with fields:
-%               .MRIC  : trial struct array, each with .mri (H x W x nFrames)
+%               .MRIC  : {1 x nTrials} cell array of MRI tensors (H x W x nFrames)
 %               .masks : struct with mask fields e.g. .masks.larynx
 %
 % Optional name-value inputs:
 %   maskName      - name of mask to use, must exist in results.masks (default: "noName")
-%   flipud        - flip frames vertically before processing (default: false)
 %   rescaleFactor - spatial rescaling factor passed to imresize (default: 1)
 %   doPlot        - display frames with centroid overlay during processing (default: false)
 %
 % Output:
 %   results - input struct with added fields:
-%               .(maskName).meanInt  : {1 x nTrials} mean intensity vectors
-%               .(maskName).centroid : {1 x nTrials} centroid position matrices [x, y]
+%               .masks.(maskName).meanInt  : {1 x nTrials} mean intensity vectors
+%               .masks.(maskName).centroid : {1 x nTrials} centroid position matrices [x, y]
 %
 % Notes:
 %   - Mean intensity is a proxy for constriction degree: lower intensity
@@ -42,7 +41,7 @@ function results = extractROIProperties(results, opts)
 % See also: regionprops, drawMRIMask, computeMRIStd
 %
 % Author: Francesco Burroni
-% Last edited: 2026
+% Last edited: Mar 25 2026
 
 %% Input/Output argument validation
 arguments (Input)
@@ -61,8 +60,8 @@ mask = results.masks.(opts.maskName);
 %% Main loop over trials
 for k = 1:numel(results.MRIC)
 
-    %% Preprocessing: flip and rescale MRI frames if needed
-    mri = imresize((results.MRIC{k}), opts.rescaleFactor);
+    %% Preprocessing: rescale MRI frames if needed
+    mri = imresize(results.MRIC{k}, opts.rescaleFactor);
 
     % Preallocate outputs for this trial
     nFrames     = size(mri, 3);
@@ -108,8 +107,8 @@ for k = 1:numel(results.MRIC)
 
     end % end frame loop
 
-    %% Store trajectories for this trial directly under mask name
-    % Access pattern: results.larynx.meanInt{k}, results.velum.centroid{k}
+    %% Store trajectories under results.masks.(maskName)
+    % Access pattern: results.masks.larynx.meanInt{k}, results.masks.velum.centroid{k}
     results.masks.(opts.maskName).meanInt{k}  = meanInt;
     results.masks.(opts.maskName).centroid{k} = centroidInt;
 

@@ -79,6 +79,7 @@ results.MRIStd = std(double(results.MRI), 1, 3);
 % this is integrated into uifigure-based visualizer
 colormap(opts.colorMap)
 imagesc(results.MRIStd)
+clim([0 max(results.MRIStd(:))])
 colorbar()
 set(gca, "LineWidth", 2)
 
