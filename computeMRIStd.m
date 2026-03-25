@@ -1,4 +1,4 @@
-function sigmaM = computeMRIStd(S, opts)
+function [sigmaM, image3DM] = computeMRIStd(S, opts)
 % Compute an std Matrix from MRI tensor to initialize centroid
 % tracking
 
@@ -11,17 +11,19 @@ arguments (Input)
         "abyss","nebula","jet","lines"])} = "bone";
     opts.fName string = ""
     opts.dims double = 0.75;
+    opts.flipud logical = false
 end
 
 arguments (Output)
     sigmaM (:,:)
+    image3DM(:,:,:)
 end
 
 % Prepare figure
 
 colormap(opts.colorMap)
-MRI = (buildMRITensor(S,flipud=true));
-sigmaM = std(double(MRI),1,3);
+image3DM = (buildMRITensor(S,flipud=opts.flipud));
+sigmaM = std(double(image3DM),1,3);
 imagesc(sigmaM)
 colorbar()
 set(gca,"LineWidth",2)
