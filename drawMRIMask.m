@@ -1,50 +1,61 @@
-function mask = drawMRIMask(results, opts)
-% DRAWMASK Interactively draw a mask on an MRI image
+function results = drawMRIMask(results, opts)
+% DRAWMRIMAGE Interactively draw a mask on an MRI image and store it in results.
 %
-%   mask = drawMask(results) displays the first MRI frame fused with the
-%   standard deviation image as a falsecolor overlay, prompts the user to
-%   draw a rectangular ROI, and returns a logical mask.
+% Displays the first MRI frame fused with the standard deviation image as a
+% falsecolor overlay, prompts the user to draw an ROI, and stores the resulting
+% mask in results.masks.(maskName) for downstream use in trajectory extraction
+% and visualization.
 %
-%   mask = drawMask(results, maskType="polygon") uses a polygon ROI instead,
-%   useful for irregular anatomical regions such as the velum.
+% The user is shown the resulting mask overlaid on the first frame and asked
+% to confirm. If unsatisfied, they can redraw until happy.
 %
-%   mask = drawMask(results, maskName="velum") attaches a name to the mask
-%   for later identification and visualization.
+% Syntax:
+%   results = drawMRIMask(results)
+%   results = drawMRIMask(results, maskName="velum", maskType="polygon")
 %
-%   The user is shown the resulting mask overlaid on the first frame and
-%   asked to confirm. If unsatisfied, they can redraw until happy.
+% Inputs:
+%   results       - struct with fields:
+%                     .MRI    : H x W x nFrames MRI tensor
+%                     .MRIStd : H x W standard deviation map
 %
-%   Input:
-%       results       - struct with fields:
-%                         .MRI     [H x W x T] MRI tensor
-%                         .mriStd  [H x W] standard deviation image
-%   Optional:
-%       maskType      - string, ROI shape: "rectangle" (default), "polygon",
-%                       "ellipse", or "circle"
-%       maskName      - string, label for this mask (default: "")
-%   Output:
-%       mask          - struct with fields:
-%                         .name    string label
-%                         .array   [H x W] logical mask array
+% Optional name-value inputs:
+%   maskType  - ROI shape: "rectangle" (default), "polygon", "ellipse", "circle"
+%   maskName  - string label for this mask (default: "No Name Mask")
+%               used as field name in results.masks.(maskName)
+%
+% Output:
+%   results   - input struct with added field:
+%                 .masks.(maskName) : struct with fields
+%                     .name  : string label
+%                     .array : H x W logical mask array
+%                     .type  : string ROI type used
+%
+% See also: computeMRIStd, extractROIProperties
+%
+% Author: Francesco Burroni
+% Last edited: 2026
 
+%% Input/Output argument validation
 arguments (Input)
     results
-    opts.maskType (1,1) string {mustBeMember(opts.maskType, ["rectangle","polygon","ellipse","circle"])} = "rectangle"
-    opts.maskName = "No Name Mask"
+    opts.maskType (1,1) string {mustBeMember(opts.maskType, ...
+        ["rectangle","polygon","ellipse","circle"])} = "rectangle"
+    opts.maskName (1,1) string = "noName"
 end
 arguments (Output)
-    mask
+    results
 end
 
-mask.name = opts.maskName;
+%% Interactive ROI drawing loop
 answer = "";
-
 while ~strcmpi(answer, "Yes")
-    % Display first frame fused with std image as drawing canvas
-    imshowpair(results.MRI(:,:,1), results.mriStd, "falsecolor")
+
+    %% Display drawing canvas — first frame fused with std map
+    % Falsecolor overlay highlights high-variance regions to guide mask placement
+    imshowpair(results.MRI(:,:,1), results.MRIStd, "falsecolor")
     shg
 
-    % Draw ROI of requested type
+    %% Draw ROI of requested type
     switch opts.maskType
         case "rectangle"
             roi = drawrectangle();
@@ -56,12 +67,17 @@ while ~strcmpi(answer, "Yes")
             roi = drawcircle();
     end
 
-    % Show mask overlaid on first frame for confirmation
-    mask.array = roi.createMask;
+    %% Preview mask overlaid on first frame for user confirmation
+    mask.array = roi.createMask();
     imshowpair(results.MRI(:,:,1), mask.array, "falsecolor")
     shg
-
     answer = questdlg("Is the ROI okay?", "ROI Confirmation");
+
 end
+
+%% Store mask in results struct under its name
+mask.name = opts.maskName;
+mask.type = opts.maskType;
+results.masks.(opts.maskName) = mask;
 
 end
