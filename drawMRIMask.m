@@ -1,4 +1,4 @@
-function mask = drawMask(results, opts)
+function mask = drawMRIMask(results, opts)
 % DRAWMASK Interactively draw a mask on an MRI image
 %
 %   mask = drawMask(results) displays the first MRI frame fused with the
@@ -38,7 +38,6 @@ end
 
 mask.name = opts.maskName;
 answer = "";
-results.MRI = buildMRITensor(S);
 
 while ~strcmpi(answer, "Yes")
     % Display first frame fused with std image as drawing canvas

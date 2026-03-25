@@ -1,6 +1,7 @@
-function [] = inspectMRITracking(results,opts)
+function [] = inspectMRITracking(S, results,opts)
 % Display results of MRI tracking
 arguments (Input)
+S
 results
 opts.colormap (1,1) string {mustBeMember(opts.colormap, ...
     ["parula","turbo","hsv","hot","cool","spring","summer","autumn","winter", ...
