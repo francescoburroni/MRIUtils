@@ -3,7 +3,8 @@ function results = computeMRIStd(S, opts)
 % across frames to visualize articulatorily active regions of the vocal tract.
 %
 % This function serves as the entry point for the results struct, initializing
-% two core fields:
+% three core fields:
+%   - results.MRIC   : cell array of per-trial MRI data (source of truth)
 %   - results.MRI    : the full concatenated MRI tensor across all trials
 %   - results.MRIStd : pixel-wise std map, used to draw masks and identify
 %                      high-variance (articulatorily active) regions
@@ -27,7 +28,8 @@ function results = computeMRIStd(S, opts)
 %
 % Output:
 %   results     - struct with fields:
-%                   .MRI    : H x W x nTotalFrames uint16 tensor
+%                   .MRIC   : trial struct array S (source of truth for per-trial data)
+%                   .MRI    : H x W x nTotalFrames uint16 tensor (for PCA/std)
 %                   .MRIStd : H x W double std map
 %
 % See also: buildMRITensor, drawMRIMask, extractROIProperties
@@ -48,12 +50,24 @@ arguments (Input)
     opts.flipud logical = false  % flip MRI frames vertically before processing
 end
 arguments (Output)
-    results  % struct with fields MRI and MRIStd
+    results  % struct with fields MRIC, MRI, and MRIStd
 end
 
-%% Build MRI tensor and compute std map
+%% Build MRI tensor and store trial struct
+% Store trial struct array as source of truth for per-trial access.
+% If flipud is requested, flip the .mri field of each trial in place
+% so that results.MRIC is always in display orientation.
+if opts.flipud
+    for k = 1:numel(S)
+        S(k).mri = flipud(S(k).mri);       
+    end
+end
+% Transpose to have rows
+results.MRIC = {S.mri};
+results.MRIFs = [S.mriFs];
+
 % Concatenate all trial frames into a single 3D tensor (H x W x nTotalFrames)
-results.MRI = buildMRITensor(S, flipud=opts.flipud);
+results.MRI = buildMRITensor(S);
 
 % Compute pixel-wise standard deviation across the frame dimension.
 % High values indicate pixels that move a lot — i.e. air-tissue boundaries
@@ -77,7 +91,7 @@ if ~strcmpi(opts.fName, "")
     close(fig)
 else
     % Interactive mode: wait for user to inspect std map before continuing
-    fprintf("Press space bar to continue \n")
+    fprintf("Press enter to continue \n")
     pause()
 end
 
