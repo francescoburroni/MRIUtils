@@ -76,6 +76,15 @@ while ~strcmpi(answer, "Yes")
 
 end
 
+%% Compute pharyngeal reference point for velum mask
+% The top-right corner of the velum ROI approximates the velopharyngeal
+% port — the point the velum moves toward/away from during opening/closing.
+% Only meaningful for the velum mask.
+if strcmpi(opts.maskName, "velum")
+    [rows, cols] = find(mask.array);
+    mask.pharyngealRef = [max(cols), min(rows)];
+end
+
 %% Store mask in results struct under its name
 mask.name = opts.maskName;
 mask.type = opts.maskType;

@@ -1,13 +1,15 @@
 function results = extractROIProperties(results, opts)
-% EXTRACTROIPROPERTIES Extract mean intensity and weighted centroid in a
-% mask ROI from rtMRI speech data, storing results in the results struct.
+% EXTRACTROIPROPERTIES Extract mean intensity, weighted centroid, and
+% (for velum) velopharyngeal aperture from a mask ROI in rtMRI speech data.
 %
 % For each trial in results.MRIC, loops over MRI frames and computes:
 %   - Mean pixel intensity within the mask region (constriction degree proxy)
 %   - Weighted centroid of the mask region, using pixel intensities as weights
+%   - Velopharyngeal aperture (velum mask only): Euclidean distance from
+%     centroid to pharyngeal reference point stored in mask.pharyngealRef
 %
-% Results are stored directly under results.(maskName) for flat, readable
-% access e.g. results.larynx.meanInt, results.velum.centroid.
+% Results are stored under results.masks.(maskName) alongside the mask array,
+% keeping all mask-related data together in one place.
 %
 % If the mask contains multiple connected components (e.g. upper/lower lip),
 % the function selects the most anatomically appropriate component based on
@@ -15,34 +17,38 @@ function results = extractROIProperties(results, opts)
 %
 % Syntax:
 %   results = extractROIProperties(results)
-%   results = extractROIProperties(results, maskName="larynx", flipud=true, doPlot=true)
+%   results = extractROIProperties(results, maskName="larynx", doPlot=true)
 %
 % Inputs:
 %   results - struct with fields:
-%               .MRIC  : trial struct array, each with .mri (H x W x nFrames)
+%               .MRIC  : {1 x nTrials} cell array of MRI tensors (H x W x nFrames)
 %               .masks : struct with mask fields e.g. .masks.larynx
+%                        for velum mask, must also contain .pharyngealRef [1x2]
 %
 % Optional name-value inputs:
 %   maskName      - name of mask to use, must exist in results.masks (default: "noName")
-%   flipud        - flip frames vertically before processing (default: false)
 %   rescaleFactor - spatial rescaling factor passed to imresize (default: 1)
 %   doPlot        - display frames with centroid overlay during processing (default: false)
 %
 % Output:
 %   results - input struct with added fields:
-%               .(maskName).meanInt  : {1 x nTrials} mean intensity vectors
-%               .(maskName).centroid : {1 x nTrials} centroid position matrices [x, y]
+%               .masks.(maskName).meanInt  : {1 x nTrials} mean intensity vectors
+%               .masks.(maskName).centroid : {1 x nTrials} centroid position matrices [x, y]
+%               .masks.velum.aperture      : {1 x nTrials} velopharyngeal aperture vectors
+%                                            (velum mask only)
 %
 % Notes:
 %   - Mean intensity is a proxy for constriction degree: lower intensity
 %     (more air/darkness in ROI) typically indicates greater constriction.
 %   - Weighted centroid tracks the center of mass of the articulator within
 %     the ROI, useful for tracking articulator position over time.
+%   - Velum aperture is the Euclidean distance from the centroid to the
+%     top-right corner of the velum ROI, approximating the velopharyngeal port.
 %
 % See also: regionprops, drawMRIMask, computeMRIStd
 %
 % Author: Francesco Burroni
-% Last edited: 2026
+% Last edited: Mar 25 2026
 
 %% Input/Output argument validation
 arguments (Input)
@@ -58,16 +64,23 @@ end
 %% Retrieve mask from results
 mask = results.masks.(opts.maskName);
 
+%% Check if velum aperture should be computed
+% Requires pharyngealRef to be defined in the mask struct
+isVelum = strcmpi(opts.maskName, "velum") && isfield(mask, "pharyngealRef");
+
 %% Main loop over trials
 for k = 1:numel(results.MRIC)
 
-    %% Preprocessing: flip and rescale MRI frames if needed
-    mri = imresize((results.MRIC{k}), opts.rescaleFactor);
+    %% Preprocessing: rescale MRI frames if needed
+    mri = imresize(results.MRIC{k}, opts.rescaleFactor);
 
     % Preallocate outputs for this trial
-    nFrames     = size(mri, 3);
-    meanInt     = nan(nFrames, 1);
-    centroidInt = nan(nFrames, 2);
+    nFrames      = size(mri, 3);
+    meanInt      = nan(nFrames, 1);
+    centroidInt  = nan(nFrames, 2);
+    if isVelum
+        velumAperture = nan(nFrames, 1);
+    end
 
     %% Frame loop: compute intensity and centroid per frame
     for l = 1:nFrames
@@ -97,6 +110,13 @@ for k = 1:numel(results.MRIC)
                 mask.name, numel(props), l, selectionRule(mask.name));
         end
 
+        %% Velum aperture — Euclidean distance from centroid to pharyngeal reference
+        % The pharyngeal reference is the top-right corner of the velum ROI,
+        % approximating the velopharyngeal port. Larger distance = more open velum.
+        if isVelum
+            velumAperture(l) = sqrt(sum((mask.pharyngealRef - centroidInt(l,:)).^2));
+        end
+
         %% Optional visualization
         if opts.doPlot
             imagesc(frame); hold on;
@@ -108,10 +128,15 @@ for k = 1:numel(results.MRIC)
 
     end % end frame loop
 
-    %% Store trajectories for this trial directly under mask name
-    % Access pattern: results.larynx.meanInt{k}, results.velum.centroid{k}
+    %% Store trajectories under results.masks.(maskName)
+    % Access pattern: results.masks.larynx.meanInt{k}, results.masks.velum.centroid{k}
     results.masks.(opts.maskName).meanInt{k}  = meanInt;
     results.masks.(opts.maskName).centroid{k} = centroidInt;
+
+    % Store velum aperture if computed
+    if isVelum
+        results.masks.(opts.maskName).aperture{k} = velumAperture;
+    end
 
 end % end trial loop
 
