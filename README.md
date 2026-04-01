@@ -247,13 +247,10 @@ save(fName, "results")
 
 ## Roadmap
 
-- [ ] Semi-polar grid analysis — IPS/Carignan convention
-- [ ] Semi-polar grid analysis — PNS origin convention
+- [ ] Semi-polar grid analysis
 - [ ] Aperture function extraction and cross-speaker normalization
-- [ ] Whole-image PCA decomposition
-- [ ] Whole-image NMF decomposition
-- [ ] Python layer — SAM 3 automatic articulator segmentation
-- [ ] Python layer — cross-speaker aperture function analysis
+- [ ] Whole-image PCA/NNMF decomposition
+- [ ] Python layer
 
 ---
 
@@ -287,5 +284,4 @@ MIT. See `LICENSE` for details.
 ---
 
 ## Acknowledgments
-
-Developed at the Institute for Phonetics and Speech Processing, Ludwig-Maximilians-Universität München, in the Spoken Language Processing Group (Chair: Prof. James Kirby). The rtMRI data used in the development of this toolbox were collected as part of DFG project 520195671 *Nasality, Length and Diphthongization in Québec French: An MRI Study* (PI: Josiane Riverin-Coutlée).
+Developed at the Institute for Phonetics and Speech Processing, Ludwig-Maximilians-Universität München, in the Spoken Language Processing Group (Chair: Prof. James Kirby). The rtMRI data used in the development of this toolbox were collected as part of DFG project 520195671 Nasality, Length and Diphthongization in Québec French: An MRI Study (PI: Josiane Riverin-Coutlée).
