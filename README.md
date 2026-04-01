@@ -269,11 +269,9 @@ A methods paper is in preparation.
 
 ## Empirical applications
 
-MRIUtils was developed in the context of DFG project 520195671, a large-scale rtMRI study of nasality, vowel length, and diphthongization in Québec French (PI: Josiane Riverin-Coutlée, IPS LMU München). The toolbox provides the core analysis infrastructure for that project, with the velum aperture measure being directly central to the investigation of velopharyngeal dynamics in nasal vowels.
-
+The rtMRI data used in developing and testing this toolbox were collected as part of DFG project 520195671 Nasality, Length and Diphthongization in Québec French: An MRI Study (PI: Josiane Riverin-Coutlée, IPS LMU München).
 First empirical application:
-
-Burroni, F. & Riverin-Coutlée, J. (in prep.). *Voicing as a whole-vocal-tract articulation: Evidence from real-time MRI of Québec French bilabial stops.*
+Burroni, F. & Riverin-Coutlée, J. (in prep.). Voicing as a whole-vocal-tract articulation: Evidence from real-time MRI of Québec French bilabial stops
 
 ---
 
@@ -284,4 +282,4 @@ Apache License 2.0. See `LICENSE` for details.
 ---
 
 ## Acknowledgments
-Developed at the Institute for Phonetics and Speech Processing, Ludwig-Maximilians-Universität München, in the Spoken Language Processing Group (Chair: Prof. James Kirby). The rtMRI data used in the development of this toolbox were collected as part of DFG project 520195671 Nasality, Length and Diphthongization in Québec French: An MRI Study (PI: Josiane Riverin-Coutlée).
+Developed at the Institute for Phonetics and Speech Processing, Ludwig-Maximilians-Universität München, in the Spoken Language Processing Group (Chair: Prof. James Kirby). The rtMRI data used in testing this toolbox were collected as part of DFG project 520195671 Nasality, Length and Diphthongization in Québec French: An MRI Study (PI: Josiane Riverin-Coutlée), and recorded at the Max Planck Institute for Multidisciplinary Sciences, Göttingen, in collaboration with Jens Frahm and Dirk Voit. Pre-processing scripts and general infrastructure developed by Philip Hoole (IPS LMU München) were used in earlier stages of the data preparation pipeline.
