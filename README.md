@@ -279,7 +279,7 @@ Burroni, F. & Riverin-Coutlée, J. (in prep.). *Voicing as a whole-vocal-tract a
 
 ## License
 
-MIT. See `LICENSE` for details.
+Apache License 2.0. See `LICENSE` for details.
 
 ---
 
