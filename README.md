@@ -67,17 +67,27 @@ All core functions take and return the same `results` struct. `buildMRITensor` a
 ## Gallery
 
 ### Pixel-wise standard deviation map
-`computeMRIStd` computes the std across all frames and tokens. High-variance pixels trace articulatorily active air-tissue boundaries — tongue body, velum, larynx, lips — making the std map a natural guide for mask placement.
+`computeMRIStd` computes the std across all frames and tokens. High-variance pixels trace articulatorily active air-tissue boundaries — tongue body, velum, larynx, lips — making the std map a natural guide for semi-automatic mask placement.
 
 ![std map](assets/std_map.png)
 
-### Variance threshold visualization
-The std map displayed at multiple intensity thresholds, allowing the user to select the appropriate threshold for ROI boundary detection for a given speaker and dataset.
+### ROI masks and centroid tracking
+`drawMRIMask` overlays ROI masks (orange) on the MRI frame. `extractROIProperties` tracks the intensity-weighted centroid (circular markers) within each ROI frame by frame. Three ROIs are shown: lips (left), velum (upper right), larynx (lower right).
 
-![threshold viz](assets/threshold_viz.png)
+![roi masks](assets/roi_masks.png)
 
-### Example outputs — Québec French voicing contrast
-ROI trajectories extracted with MRIUtils, used to study the voiced/voiceless bilabial stop contrast (/b/ vs /p/) in Québec French (Burroni & Riverin-Coutlée, in prep.).
+### Articulatory trajectories with synchronized MRI frames
+Example trajectories extracted by `extractROIProperties` from a single trial, with three representative MRI frames at corresponding time points. Left: Lip Constriction Degree (mean intensity); Center: Larynx Height (centroid vertical position); Right: Velum Opening (aperture). Trajectories are in raw units prior to z-scoring.
+
+![trajectories](assets/trajectories.png)
+
+### Synchronized MRI, spectrogram and waveform
+`displayMRI` renders an animated figure showing the MRI frame alongside the spectrogram and waveform, synchronized in time, and writes the result to a video file.
+
+![display mri](assets/display_mri.png)
+
+### Group-level outputs — Québec French voicing contrast
+Z-scored peak values extracted across 400 tokens from 10 QF speakers, used to study the voiced/voiceless bilabial stop contrast (/b/ vs /p/). Burroni & Riverin-Coutlée (in prep.).
 
 | Lip Constriction Degree | Larynx Height | Velopharyngeal Aperture |
 |:-:|:-:|:-:|
