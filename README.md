@@ -69,7 +69,7 @@ All core functions take and return the same `results` struct. `buildMRITensor` a
 ### Pixel-wise standard deviation map
 `computeMRIStd` computes the std across all frames and tokens. High-variance pixels trace articulatorily active air-tissue boundaries — tongue body, velum, larynx, lips — making the std map a natural guide for semi-automatic mask placement.
 
-![std map](assets/std_map.png)
+![std map](assets/std_map_new.png)
 
 ### ROI masks and centroid tracking
 `drawMRIMask` overlays ROI masks (orange) on the MRI frame. `extractROIProperties` tracks the intensity-weighted centroid (circular markers) within each ROI frame by frame. Three ROIs are shown: lips (left), velum (upper right), larynx (lower right).
