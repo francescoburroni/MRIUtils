@@ -1,4 +1,4 @@
-# MRIUtils 🎙️
+# MRIUtils
 
 **A modular MATLAB toolbox for real-time MRI vocal tract analysis**
 
